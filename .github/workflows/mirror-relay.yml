@@ -24,15 +24,18 @@ jobs:
       - name: 同步 GitLab (seanlab007)
         run: |
           cd src
-          git push --force --all --tags "https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/seanlab007/darkmatterbank.git" 2>&1 || echo "GitLab sync skipped"
+          git push --force --all "https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/seanlab007/darkmatterbank.git" 2>&1 || echo "GitLab all skipped"
+          git push --force --tags "https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/seanlab007/darkmatterbank.git" 2>&1 || echo "GitLab tags skipped"
       - name: 同步 Gitee (seanlab007)
         run: |
           cd src
-          git push --force --all --tags "https://oauth2:${{ secrets.GITEE_TOKEN }}@gitee.com/seanlab007/darkmatterbank.git" 2>&1 || echo "Gitee sync skipped"
+          git push --force --all "https://oauth2:${{ secrets.GITEE_TOKEN }}@gitee.com/seanlab007/darkmatterbank.git" 2>&1 || echo "Gitee all skipped"
+          git push --force --tags "https://oauth2:${{ secrets.GITEE_TOKEN }}@gitee.com/seanlab007/darkmatterbank.git" 2>&1 || echo "Gitee tags skipped"
       - name: 同步 Gitee (daiomega)
         run: |
           cd src
-          git push --force --all --tags "https://oauth2:${{ secrets.GITEE_DAI_TOKEN }}@gitee.com/daiomega/darkmatterbank.git" 2>&1 || echo "Gitee daiomega sync skipped"
+          git push --force --all "https://oauth2:${{ secrets.GITEE_DAI_TOKEN }}@gitee.com/daiomega/darkmatterbank.git" 2>&1 || echo "Gitee-dai all skipped"
+          git push --force --tags "https://oauth2:${{ secrets.GITEE_DAI_TOKEN }}@gitee.com/daiomega/darkmatterbank.git" 2>&1 || echo "Gitee-dai tags skipped"
       - name: 回读验证
         run: |
           cd src
