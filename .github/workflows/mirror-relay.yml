@@ -1,0 +1,49 @@
+name: DMB Mirror Relay Sync
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  relay-sync:
+    runs-on: ubuntu-latest
+    env:
+      GIT_SSH_COMMAND: "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new"
+    steps:
+      - name: 安装部署密钥
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DMB_DEPLOY_KEY_B64 }}" | base64 -d > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+      - name: 克隆源仓库（私有，只读部署密钥）
+        run: git clone --mirror git@github.com:benedictashford20-cmyk/darkmatterbank.git src
+      - name: 同步 GitLab (seanlab007)
+        run: |
+          cd src
+          git push --force --all --tags "https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/seanlab007/darkmatterbank.git" 2>&1 || echo "GitLab sync skipped"
+      - name: 同步 Gitee (seanlab007)
+        run: |
+          cd src
+          git push --force --all --tags "https://oauth2:${{ secrets.GITEE_TOKEN }}@gitee.com/seanlab007/darkmatterbank.git" 2>&1 || echo "Gitee sync skipped"
+      - name: 同步 Gitee (daiomega)
+        run: |
+          cd src
+          git push --force --all --tags "https://oauth2:${{ secrets.GITEE_DAI_TOKEN }}@gitee.com/daiomega/darkmatterbank.git" 2>&1 || echo "Gitee daiomega sync skipped"
+      - name: 回读验证
+        run: |
+          cd src
+          MAIN_SHA=$(git rev-parse refs/heads/main)
+          echo "## DMB 镜像中转同步" >> $GITHUB_STEP_SUMMARY
+          echo "| 端 | main SHA | 状态 |" >> $GITHUB_STEP_SUMMARY
+          echo "|----|----------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| GitHub 源 (deploy-key) | ${MAIN_SHA} | 基准 |" >> $GITHUB_STEP_SUMMARY
+          for pair in "gitlab:https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/seanlab007/darkmatterbank.git" "gitee-sean:https://oauth2:${{ secrets.GITEE_TOKEN }}@gitee.com/seanlab007/darkmatterbank.git" "gitee-dai:https://oauth2:${{ secrets.GITEE_DAI_TOKEN }}@gitee.com/daiomega/darkmatterbank.git"; do
+            name="${pair%%:*}"; url="${pair#*:}"
+            sha=$(git ls-remote "$url" refs/heads/main 2>/dev/null | awk '{print $1}')
+            if [ -n "$sha" ] && [ "$sha" = "$MAIN_SHA" ]; then st="一致"; else st="不一致(${sha:-无})"; fi
+            echo "| ${name} | ${sha:-无} | ${st} |" >> $GITHUB_STEP_SUMMARY
+          done
