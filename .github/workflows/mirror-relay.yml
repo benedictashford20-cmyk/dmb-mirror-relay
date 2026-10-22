@@ -2,7 +2,8 @@ name: DMB Mirror Relay Sync
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    # 每天一次 16:00 UTC = 次日 00:00 CST（低峰）；原每30分钟一次空转消耗分钟，可手动 dispatch
+    - cron: '0 16 * * *'
   workflow_dispatch:
 
 permissions:
